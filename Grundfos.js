@@ -1,22 +1,21 @@
-//Loading modules
+//      Main Program for Motor Control
+//      by Frank Hsiung
+// Loading modules
 var http = require('http');
 var fs = require('fs');
 var path = require('path');
 var b = require('bonescript');
+var RelayPin = "P9_12";                 // default Relay Pin
 
-b.pinMode('USR0', b.OUTPUT);            // on/off the same as Relay
-b.pinMode('USR1', b.OUTPUT);            // on/off the same as Relay
-b.pinMode('USR2', b.OUTPUT);            // alive toggle with USR3
+b.pinMode('USR0', b.OUTPUT);            // USR0, USR1 are on/off the same as Relay
+b.pinMode('USR1', b.OUTPUT);
+b.pinMode('USR2', b.OUTPUT);            // USR2 alive toggle with USR3
 b.pinMode('USR3', b.OUTPUT);
-// b.digitalWrite('USR0', b.HIGH);
+b.pinMode(RelayPin, b.OUTPUT);          // Relay Pin for Turn ON/OFF Motor
 
-var outputPin = "P9_12";
+setTimeout(aliveSignal0, 500);          // Initialization for Toggling LED
 
-b.pinMode(outputPin, b.OUTPUT);
-b.digitalWrite(outputPin, b.LOW);
-// b.digitalWrite(outputPin, b.HIGH);
-
-
+// -----------------------------------------------------------------------------
 // Initialize the server on port 8888
 var server = http.createServer(function (req, res) {
     // requesting files
@@ -27,40 +26,52 @@ var server = http.createServer(function (req, res) {
     // if(fileExtension == '.css') {
     //     contentType = 'text/css';
     // }
-    fs.exists(file, function(exists){
+    fs.exists(file, function(exists) {
         if(exists){
-            fs.readFile(file, function(error, content){
-                if(!error){
+            fs.readFile(file, function(error, content) {
+                if(!error) {
                     res.writeHead(200,{'content-type':contentType}); // Page found, write content
                     res.end(content);
                 }
             })
         }
-        else{
+        else {
             res.writeHead(404);         // Page not found
             res.end('Page not found');
         }
     })
 }).listen(8888);
+// -----------------------------------------------------------------------------
+var io = require('socket.io').listen(server); // Loading socket io module
 
-// Loading socket io module
-var io = require('socket.io').listen(server);
-
-// When communication is established
-io.on('connection', function (socket) {
+io.on('connection', function (socket) { // When communication is established
     socket.on('changeState', handleChangeState);
 });
 
-// Change led state when a button is pressed
-function handleChangeState(data) {
-    var newData = JSON.parse(data);
-    console.log("LED = " + newData.state);
-    // turns the LED ON or OFF
-    b.digitalWrite('USR0', newData.state);
-    b.digitalWrite('USR1', newData.state);
-    b.digitalWrite('USR2', newData.state);
-    b.digitalWrite('USR3', newData.state);
+server.listen(console.log("Server Running ..."));
+// -----------------------------------------------------------------------------
+// Function Call {
+function handleChangeState(data) { // Change led state when a button is pressed
+    var pinOut = JSON.parse(data);
+    console.log("LED = " + pinOut.state);
+    
+    b.digitalWrite(RelayPin, pinOut.state);
+    b.digitalWrite('USR0', pinOut.state); // turns the LED ON or OFF
+    b.digitalWrite('USR1', pinOut.state);
 }
 
-// Displaying a console message for user feedback
-server.listen(console.log("Server Running ..."));
+function aliveSignal0() {
+    b.digitalWrite('USR2', b.LOW);
+    b.digitalWrite('USR3', b.HIGH);
+    setTimeout(aliveSignal1, 500);      // Toggle LED
+}
+
+function aliveSignal1() {
+    b.digitalWrite('USR2', b.HIGH);
+    b.digitalWrite('USR3', b.LOW);
+    setTimeout(aliveSignal0, 500);      // Toggle LED
+}
+// }
+
+
+
