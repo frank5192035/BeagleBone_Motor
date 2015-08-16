@@ -14,15 +14,20 @@ b.pinMode('USR1', b.OUTPUT);
 b.pinMode('USR2', b.OUTPUT);            // USR2 alive toggle with USR3
 b.pinMode('USR3', b.OUTPUT);
 b.pinMode(RelayPin, b.OUTPUT);          // Relay Pin for Turn ON/OFF Motor
+b.digitalWrite(RelayPin, 0);            // turn off motor
+b.digitalWrite('USR0', 0);              // turns the LED OFF
+b.digitalWrite('USR1', 0);
+b.digitalWrite('USR2', 0);
 // }----------------------------------------------------------------------------
 // Global Variables and Constants {
 const ShowerTime = 1200;                // 20 Minutes = 1200 Seconds
-var downCounter = 0
+var downCounter = 0;                    // Main Counter of Motor ON
+var logCounter = 0;                     // for turn on log
 var intervalObject;                     // Returns a timeoutObject for possible use with clearTimeout()
 // }----------------------------------------------------------------------------
 // Initialization {
+setTimeout(stateCheckCounter, 1000);    // Initialization for Main State
 setTimeout(aliveSignal0, 500);          // Initialization for Toggling LED
-
 // }----------------------------------------------------------------------------
 // Initialize the server on port 8888 {
 var server = http.createServer(function (req, res) {
@@ -63,13 +68,23 @@ server.listen(console.log("Server Running ..."));
 function showerON(data) { // Clent-size signal for reset downCounter to ShowerTime
     var shower = JSON.parse(data);
     if (shower.on == 1) {
-        var downCounter = ShowerTime;   // set downCounter to ShowerTime
-        console.log("Grundfos Hot Water Pump is ON... ");
+        downCounter = ShowerTime;       // set or reset downCounter to ShowerTime
+        logCounter++;
+        console.log(new Date().getTime() +":  Grundfos Hot Water Pump is the "+ logCounter +"th turn-on"); 
+        // XXX: Log
+        if (1 == logCounter%2) {        // Key Press Toggle
+            b.digitalWrite('USR1', 1);
+            b.digitalWrite('USR2', 0);
+        } else {
+            b.digitalWrite('USR1', 0);
+            b.digitalWrite('USR2', 1);
+        }
     }
 }
 
-function countDown() {                  // downcounting and pass downCounter value to client
-    downCounter--;
+function countDown() {
+    downCounter--;                      // downcounting 
+    // socket.emit('changeState', '{"state":1}'); // pass downCounter value to client
 }
 
 function stateCheckCounter() {
@@ -77,16 +92,22 @@ function stateCheckCounter() {
         b.digitalWrite(RelayPin, 1);    // turn on motor
         b.digitalWrite('USR0', 1);      // turns the LED ON
         intervalObject = setInterval(countDown, 999); // one second interval count down
-        setTimout(stateDownCounting, 1);// state change
+        setTimeout(stateDownCounting, 1);// state change
+    } else {
+        setTimeout(stateCheckCounter, 1000);
     }
-    b.digitalWrite('USR1', 1);
-    b.digitalWrite('USR2', 0);
 }
 
 function stateDownCounting() {
     if (downCounter > 0) {
+        setTimeout(stateDownCounting, 999);
     } else {
+        b.digitalWrite(RelayPin, 0);    // turn off motor
+        b.digitalWrite('USR0', 0);      // turns the LED OFF
+        b.digitalWrite('USR1', 0);
+        b.digitalWrite('USR2', 0);
         clearInterval(intervalObject);
+        setTimeout(stateCheckCounter, 1);// state change
     }
 }
 
