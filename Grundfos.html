@@ -9,8 +9,7 @@
 
         socket.on('downCounter', function (data) {
             var shower = JSON.parse(data);
-            document.getElementById("idSecond").innerHTML = data +" Second";
-            // document.getElementById("idSecond").innerHTML = shower.downValue +" Second";
+            document.getElementById("idSecond").innerHTML = shower.downValue +" Seconds";
         });
         
         function pumpON() {
@@ -18,9 +17,11 @@
         }
     </script>
 </head>
-    <h1>Shower Pump</h1>
+<body>
+    <div data-theme="b" data-role="header">
+        <h1>Shower Pump</h1>
+    </div>
     <p id="idSecond">0 Second</p>
     <button type="button" onclick="pumpON();">Turn ON</button>
-</div>
 </body>
 </html>
