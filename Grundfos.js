@@ -8,7 +8,7 @@ var path = require('path');
 var b = require('bonescript');
 // }----------------------------------------------------------------------------
 // set Pins {
-var RelayPin = "P9_12";                 // default Relay Pin
+var RelayPin = 'P9_12';                 // default Relay Pin
 b.pinMode('USR0', b.OUTPUT);            // USR0, USR1 are on/off the same as Relay
 b.pinMode('USR1', b.OUTPUT);
 b.pinMode('USR2', b.OUTPUT);            // USR2 alive toggle with USR3
@@ -20,7 +20,7 @@ b.digitalWrite('USR1', 0);
 b.digitalWrite('USR2', 0);
 // }----------------------------------------------------------------------------
 // Global Variables and Constants {
-const ShowerTime = 1200;                // 20 Minutes = 1200 Seconds
+const ShowerTime = 5;//1200;                // 20 Minutes = 1200 Seconds
 var downCounter = 0;                    // Main Counter of Motor ON
 var logCounter = 0;                     // for turn on log
 var intervalObject;                     // Returns a timeoutObject for possible use with clearTimeout()
@@ -29,16 +29,15 @@ var intervalObject;                     // Returns a timeoutObject for possible 
 setTimeout(stateCheckCounter, 1000);    // Initialization for Main State
 setTimeout(aliveSignal0, 500);          // Initialization for Toggling LED
 // }----------------------------------------------------------------------------
-// Initialize the server on port 8888 {
+// Initialize the server on port 8168 {
 var server = http.createServer(function (req, res) {
-    // requesting files
-    var file = '.'+((req.url=='/')?'/Grundfos.html':req.url);
+    var file = '.'+((req.url=='/')?'/Grundfos.html':req.url); // requesting files
     var fileExtension = path.extname(file);
     var contentType = 'text/html';
-    // Uncoment if you want to add css to your web page
-    // if(fileExtension == '.css') {
-    //     contentType = 'text/css';
-    // }
+            // Uncoment if you want to add css to your web page
+            // if(fileExtension == '.css') {
+            //     contentType = 'text/css';
+            // }
     fs.exists(file, function(exists) {
         if(exists){
             fs.readFile(file, function(error, content) {
@@ -53,16 +52,18 @@ var server = http.createServer(function (req, res) {
             res.end('Page not found');
         }
     })
-}).listen(8888);
+}).listen(8168);
 // }----------------------------------------------------------------------------
 // socket.io Communication {
 var io = require('socket.io').listen(server); // Loading socket io module
 
 io.on('connection', function (socket) { // When communication is established
-    socket.on('changeState', showerON);
+    socket.on('pumpON', showerON);      // pumpON string from Grundfos.html; showerON is function call of Grundfos.js
+    // socket.emit('downCounter', {'downValue':downCounter}); // pass downCounter value to client
 });
 
-server.listen(console.log("Server Running ..."));
+server.listen(console.log('Grundfos Server is Running: http://' + getIPAddress() + ':8168'));
+
 // }----------------------------------------------------------------------------
 // State Machine and Function Call {
 function showerON(data) { // Clent-size signal for reset downCounter to ShowerTime
@@ -70,7 +71,7 @@ function showerON(data) { // Clent-size signal for reset downCounter to ShowerTi
     if (shower.on == 1) {
         downCounter = ShowerTime;       // set or reset downCounter to ShowerTime
         logCounter++;
-        console.log(new Date().getTime() +":  Grundfos Hot Water Pump is the "+ logCounter +"th turn-on"); 
+        console.log(new Date +':  Grundfos Hot Water Pump is the '+ logCounter +'th turn-on'); 
         // XXX: Log
         if (1 == logCounter%2) {        // Key Press Toggle
             b.digitalWrite('USR1', 1);
@@ -83,12 +84,12 @@ function showerON(data) { // Clent-size signal for reset downCounter to ShowerTi
 }
 
 function countDown() {
-    downCounter--;                      // downcounting 
-    // socket.emit('changeState', '{"state":1}'); // pass downCounter value to client
+    console.log(downCounter--);
+    // downCounter--;                      // downcounting
 }
 
 function stateCheckCounter() {
-    if (downCounter > 180) {            // at least 3 minutes
+    if (downCounter > 1) {            // at least 3 minutes
         b.digitalWrite(RelayPin, 1);    // turn on motor
         b.digitalWrite('USR0', 1);      // turns the LED ON
         intervalObject = setInterval(countDown, 999); // one second interval count down
@@ -106,6 +107,7 @@ function stateDownCounting() {
         b.digitalWrite('USR0', 0);      // turns the LED OFF
         b.digitalWrite('USR1', 0);
         b.digitalWrite('USR2', 0);
+        console.log('\t\tGrundfos Hot Water Pump is the '+ logCounter +'th turn-off'); 
         clearInterval(intervalObject);
         setTimeout(stateCheckCounter, 1);// state change
     }
@@ -119,5 +121,18 @@ function aliveSignal0() {               // Two States only
 function aliveSignal1() {
     b.digitalWrite('USR3', 1);
     setTimeout(aliveSignal0, 200);      // Toggle LED
+}
+
+function getIPAddress() {               // Get server IP address on LAN
+  var interfaces = require('os').networkInterfaces();
+  for (var devName in interfaces) {
+    var iface = interfaces[devName];
+    for (var i = 0; i < iface.length; i++) {
+      var alias = iface[i];
+      if (alias.family === 'IPv4' && alias.address !== '127.0.0.1' && !alias.internal)
+        return alias.address;
+    }
+  }
+  return '0.0.0.0';
 }
 // }
