@@ -20,7 +20,6 @@ b.digitalWrite('USR1', 0);
 b.digitalWrite('USR2', 0);
 // }----------------------------------------------------------------------------
 // Global Variables and Constants {
-const ShowerTime = 5;//1200;                // 20 Minutes = 1200 Seconds
 var downCounter = 0;                    // Main Counter of Motor ON
 var logCounter = 0;                     // for turn on log
 var intervalObject;                     // Returns a timeoutObject for possible use with clearTimeout()
@@ -66,10 +65,10 @@ server.listen(console.log('Grundfos Server is Running: http://' + getIPAddress()
 
 // }----------------------------------------------------------------------------
 // State Machine and Function Call {
-function showerON(data) { // Clent-size signal for reset downCounter to ShowerTime
+function showerON(data) { // Clent-size signal for reset downCounter to shower.value
     var shower = JSON.parse(data);
     if (shower.on == 1) {
-        downCounter = ShowerTime;       // set or reset downCounter to ShowerTime
+        downCounter = shower.value;      // set or reset downCounter to shower.value
         logCounter++;
         console.log(new Date +':  Grundfos Hot Water Pump is the '+ logCounter +'th turn-on'); 
         // XXX: Log
@@ -84,8 +83,9 @@ function showerON(data) { // Clent-size signal for reset downCounter to ShowerTi
 }
 
 function countDown() {
-    console.log(downCounter--);
-    // downCounter--;                      // downcounting
+    // console.log(downCounter--);         // downcounting
+    downCounter--;          
+    io.sockets.emit("downCounter", '{"downValue":"'+ downCounter +'"}'); // pass downCounter value to client
 }
 
 function stateCheckCounter() {

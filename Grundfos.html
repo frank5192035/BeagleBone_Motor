@@ -9,12 +9,21 @@
 
         socket.on('downCounter', function (data) {
             var shower = JSON.parse(data);
-            document.getElementById("idSecond").innerHTML = data +" Second";
-            // document.getElementById("idSecond").innerHTML = shower.downValue +" Second";
+            document.getElementById("idSecond").innerHTML = shower.downValue +" Seconds";
         });
         
         function pumpON() {
-            socket.emit("pumpON", '{"on":1}');
+            var x = document.getElementById("slider").value;
+            document.getElementById("idSecond").innerHTML = x +" Seconds";
+            socket.emit("pumpON", '{"on":1, "value":"'+ x +'"}'); // XXX: unknown syntax
+        }
+        
+        function getBrowserWidth() {
+            if (window.innerWidth) return window.innerWidth;
+    	    else if (document.documentElement && document.documentElement.clientWidth != 0) 
+    		    return document.documentElement.clientWidth;	
+    	    else if (document.body) return document.body.clientWidth;
+    		return 0;
         }
     </script>
 </head>
@@ -31,22 +40,22 @@ jQuery and jQuery Mobile
         </h1>
     </div>
     <div data-role="fieldcontain">
-        <label for="slider0">
+        <label for="slider">
             Set Time-out in Seconds
         </label>
-        <input id="slider0" type="range" name="slider" value="5" min="3" max="12"
-        data-highlight="false" data-theme="b" onChange="ledGreen(value);">
-
+        <input id="slider" type="range" name="slider" value="7" min="3" max="12"
+            data-highlight="true" data-theme="b"> 
+            <!--onChange="ledGreen(value);"-->
     </div>    
     
-    <p id="idSecond">0 Second</p>
+    <p id="idSecond">0 Seconds</p>
 
     <button type="button" onclick="pumpON();">Turn ON</button>
     <div data-role="fieldcontain">
         <label for="Gyro">
             Power
         </label>
-        <select name="toggleswitch2" id="Gyro" data-theme="b" data-role="slider">
+        <select name="toggleswitch" id="Gyro" data-theme="b" data-role="slider">
             <option value="off">Off</option>
             <option value="on">On</option>
         </select>
