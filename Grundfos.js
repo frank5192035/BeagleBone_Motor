@@ -24,7 +24,7 @@ var downCounter = 0;                    // Main Counter of Motor ON
 var logCounter = 0;                     // for turn on log
 var intervalObject;                     // Returns a timeoutObject for possible use with clearTimeout()
 // }----------------------------------------------------------------------------
-// Initialization {
+// State Machine Initialization {
 setTimeout(stateCheckCounter, 1000);    // Initialization for Main State
 setTimeout(aliveSignal0, 500);          // Initialization for Toggling LED
 // }----------------------------------------------------------------------------
@@ -57,45 +57,37 @@ var server = http.createServer(function (req, res) {
 var io = require('socket.io').listen(server); // Loading socket io module
 
 io.on('connection', function (socket) { // When communication is established
-    socket.on('pumpON', showerON);      // pumpON string from Grundfos.html; showerON is function call of Grundfos.js
-    // socket.emit('downCounter', {'downValue':downCounter}); // pass downCounter value to client
+    socket.on('pumpON', function(data) {// Clent-size signal for reset downCounter to shower.value
+        var shower = JSON.parse(data);
+        if (shower.on == 1) {
+            downCounter = shower.value; // set or reset downCounter to shower.value
+            logCounter++;
+            console.log(new Date +': Grundfos '+ logCounter +'th turn-on for '+ shower.value +' seconds'); 
+            if (1 == logCounter%2) {    // Two LED for Key Press Toggle
+                b.digitalWrite('USR1', 1);
+                b.digitalWrite('USR2', 0);
+            } else {
+                b.digitalWrite('USR1', 0);
+                b.digitalWrite('USR2', 1);
+            }
+        }
+    }); // pumpON string from Grundfos.html; shower.on turn on Motor
 });
 
 server.listen(console.log('Grundfos Server is Running: http://' + getIPAddress() + ':8168'));
-
 // }----------------------------------------------------------------------------
 // State Machine and Function Call {
-function showerON(data) { // Clent-size signal for reset downCounter to shower.value
-    var shower = JSON.parse(data);
-    if (shower.on == 1) {
-        downCounter = shower.value;      // set or reset downCounter to shower.value
-        logCounter++;
-        console.log(new Date +':  Grundfos Hot Water Pump is the '+ logCounter +'th turn-on'); 
-        // XXX: Log
-        if (1 == logCounter%2) {        // Key Press Toggle
-            b.digitalWrite('USR1', 1);
-            b.digitalWrite('USR2', 0);
-        } else {
-            b.digitalWrite('USR1', 0);
-            b.digitalWrite('USR2', 1);
-        }
-    }
-}
-
-function countDown() {
-    // console.log(downCounter--);         // downcounting
-    downCounter--;          
-    io.sockets.emit("downCounter", '{"downValue":"'+ downCounter +'"}'); // pass downCounter value to client
-}
-
 function stateCheckCounter() {
-    if (downCounter > 1) {            // at least 3 minutes
+    if (downCounter > 1) {              // 5~20 minutes
         b.digitalWrite(RelayPin, 1);    // turn on motor
         b.digitalWrite('USR0', 1);      // turns the LED ON
-        intervalObject = setInterval(countDown, 999); // one second interval count down
-        setTimeout(stateDownCounting, 1);// state change
+        intervalObject = setInterval(function() {
+            downCounter--;
+            io.sockets.emit("downCounter", '{"downValue":"'+ downCounter +'"}');
+        }, 999); // one second interval count down; pass downCounter value to client
+        setTimeout(stateDownCounting, 1); // state change
     } else {
-        setTimeout(stateCheckCounter, 1000);
+        setTimeout(stateCheckCounter, 1000); // 
     }
 }
 

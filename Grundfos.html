@@ -4,7 +4,6 @@
     <title>Home Automation Web Server with BeagleBone</title>
     <script src = "/socket.io/socket.io.js" ></script>
     <script>
-        // var socket = io('http://localhost');
         var socket = io.connect();      // Establishing connection with server
 
         socket.on('downCounter', function (data) {
@@ -18,13 +17,13 @@
             socket.emit("pumpON", '{"on":1, "value":"'+ x +'"}'); // XXX: unknown syntax
         }
         
-        function getBrowserWidth() {
-            if (window.innerWidth) return window.innerWidth;
-    	    else if (document.documentElement && document.documentElement.clientWidth != 0) 
-    		    return document.documentElement.clientWidth;	
-    	    else if (document.body) return document.body.clientWidth;
-    		return 0;
-        }
+      <!--  function getBrowserWidth() {-->
+      <!--      if (window.innerWidth) return window.innerWidth;-->
+    	 <!--   else if (document.documentElement && document.documentElement.clientWidth != 0) -->
+    		<!--    return document.documentElement.clientWidth;	-->
+    	 <!--   else if (document.body) return document.body.clientWidth;-->
+    		<!--return 0;-->
+      <!--  }-->
     </script>
 </head>
 
