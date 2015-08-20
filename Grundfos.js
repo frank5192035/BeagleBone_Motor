@@ -70,7 +70,8 @@ io.on('connection', function (socket) { // When communication is established
                 b.digitalWrite('USR1', 0);
                 b.digitalWrite('USR2', 1);
             }
-        }
+        } else if (shower.on == 0) downCounter = 1;
+        
     }); // pumpON string from Grundfos.html; shower.on turn on Motor
 });
 
