@@ -51,7 +51,7 @@ var server = http.createServer(function (req, res) {
             res.end('Page not found');
         }
     })
-}).listen(8168);
+}).listen(8168,'192.168.0.168');
 // }----------------------------------------------------------------------------
 // socket.io Communication {
 var io = require('socket.io').listen(server); // Loading socket io module
@@ -75,7 +75,7 @@ io.on('connection', function (socket) { // When communication is established
     }); // pumpON string from Grundfos.html; shower.on turn on Motor
 });
 
-server.listen(console.log('Grundfos Server is Running: http://' + getIPAddress() + ':8168'));
+// server.listen(console.log('Grundfos Server is Running: http://' + getIPAddress() + ':8168'));
 // }----------------------------------------------------------------------------
 // State Machine and Function Call {
 function stateCheckCounter() {
