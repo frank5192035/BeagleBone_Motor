@@ -18,7 +18,7 @@
         }
         
         function powerOnOff() {
-            var x = document.getElementById("Gyro").value;
+            var x = document.getElementById("idPower").value;
             if (x == "on") {
                 document.getElementById("onButton").disabled = false;
             } else {
@@ -48,8 +48,8 @@ jQuery and jQuery Mobile
     <button type="button" id="onButton" onclick="pumpON();">Turn ON</button>
 
     <div data-role="fieldcontain">
-        <label for="Gyro"> Power </label>
-        <select data-role="slider" id="Gyro" onchange="powerOnOff()">
+        <label for="idPower"> Power </label>
+        <select data-role="slider" id="idPower" onchange="powerOnOff()">
             <option value="on" >On
             <option value="off">Off
         </select>

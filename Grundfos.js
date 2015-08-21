@@ -1,10 +1,9 @@
 //      Main Program for Motor Control
-//      by Frank Hsiung
+//      by Frank Hsiung         Aug 21, 2015
 
 // Loading modules {
 var http = require('http');
 var fs = require('fs');
-var path = require('path');
 var b = require('bonescript');
 // }----------------------------------------------------------------------------
 // set Pins {
@@ -30,10 +29,11 @@ setTimeout(aliveSignal0, 500);          // Initialization for Toggling LED
 // }----------------------------------------------------------------------------
 // Initialize the server on port 8168 {
 var server = http.createServer(function (req, res) {
-    var file = '.'+((req.url=='/')?'/Grundfos.html':req.url); // requesting files
-    var fileExtension = path.extname(file);
+    var file = '/var/lib/cloud9/BeagleBone_Motor'+((req.url=='/')?'/Grundfos.html':req.url); // requesting files
     var contentType = 'text/html';
             // Uncoment if you want to add css to your web page
+            // var path = require('path');
+            // var fileExtension = path.extname(file);
             // if(fileExtension == '.css') {
             //     contentType = 'text/css';
             // }
@@ -82,7 +82,7 @@ function stateCheckCounter() {
     if (downCounter > 1) {              // 5~20 minutes
         b.digitalWrite(RelayPin, 1);    // turn on motor
         b.digitalWrite('USR0', 1);      // turns the LED ON
-        intervalObject = setInterval(function() {
+        intervalObject = setInterval(function() { // broadcast.emit: server to "n clients"
             downCounter--;
             io.sockets.emit("downCounter", '{"downValue":"'+ downCounter +'"}');
         }, 999); // one second interval count down; pass downCounter value to client
