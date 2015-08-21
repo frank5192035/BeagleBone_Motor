@@ -5,7 +5,6 @@
     <script src = "/socket.io/socket.io.js" ></script>
     <script>
         var socket = io.connect();      // Establishing connection with server
-
         socket.on('downCounter', function (data) {
             var shower = JSON.parse(data);
             document.getElementById("idSecond").innerHTML = shower.downValue +" Seconds";
@@ -45,10 +44,10 @@ jQuery and jQuery Mobile
     
     <div data-role="header" data-theme="e" id="idSecond" align="center"> <h1> 0 Seconds </h1> </div>
 
-    <button type="button" id="onButton" onclick="pumpON();">Turn ON</button>
+    <button type="button" id="onButton" onclick="pumpON();">Start</button>
 
     <div data-role="fieldcontain">
-        <label for="idPower"> Power </label>
+        <label for="idPower"> Counter </label>
         <select data-role="slider" id="idPower" onchange="powerOnOff()">
             <option value="on" >On
             <option value="off">Off
