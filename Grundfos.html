@@ -7,12 +7,12 @@
         var socket = io.connect();      // Establishing connection with server
         socket.on('downCounter', function (data) {
             var shower = JSON.parse(data);
-            document.getElementById("idSecond").innerHTML = shower.downValue +" Seconds";
+            document.getElementById("idSecond").innerHTML = "Counter remains "+ shower.downValue +" Seconds";
         });
         
         function pumpON() {
             var x = document.getElementById("slider").value;
-            document.getElementById("idSecond").innerHTML = x +" Seconds";
+            document.getElementById("idSecond").innerHTML = "Counter remains "+ x +" seconds";
             socket.emit("pumpON", '{"on":1, "value":"'+ x +'"}'); // XXX: unknown syntax
         }
         
@@ -23,7 +23,7 @@
             } else {
                 socket.emit("pumpON", '{"on":0, "value":0}'); // XXX: unknown syntax
                 document.getElementById("onButton").disabled = true;
-                document.getElementById("idSecond").innerHTML = "1 Seconds";
+                document.getElementById("idSecond").innerHTML = "Counter remains 1 Second";
             }
         }
     </script>
@@ -42,7 +42,7 @@ jQuery and jQuery Mobile
             step="60" data-show-value="true" data-theme="b">
     </div>    
     
-    <div data-role="header" data-theme="e" id="idSecond" align="center"> <h1> 0 Seconds </h1> </div>
+    <div data-role="header" data-theme="e" id="idSecond" align="center"> <h1> set Counter </h1> </div>
 
     <button type="button" id="onButton" onclick="pumpON();">Start</button>
 
